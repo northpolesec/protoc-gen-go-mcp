@@ -146,6 +146,11 @@ type ConnectByteStreamClient interface {
 	QueryWriteStatus(ctx context.Context, req *connect.Request[bytestream.QueryWriteStatusRequest]) (*connect.Response[bytestream.QueryWriteStatusResponse], error)
 }
 
+// SimpleConnectByteStreamClient is compatible with the simple connectrpc-go client interface.
+type SimpleConnectByteStreamClient interface {
+	QueryWriteStatus(ctx context.Context, req *bytestream.QueryWriteStatusRequest) (*bytestream.QueryWriteStatusResponse, error)
+}
+
 // ForwardToConnectByteStreamClient registers a connectrpc client, to forward MCP calls to it.
 func ForwardToConnectByteStreamClient(s *mcpserver.MCPServer, client ConnectByteStreamClient, opts ...runtime.Option) {
 	config := runtime.NewConfig()
@@ -185,6 +190,52 @@ func ForwardToConnectByteStreamClient(s *mcpserver.MCPServer, client ConnectByte
 		}
 
 		marshaled, err = (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(resp.Msg)
+		if err != nil {
+			return nil, err
+		}
+		return mcp.NewToolResultText(string(marshaled)), nil
+	})
+}
+
+// ForwardToSimpleConnectByteStreamClient registers a simple connectrpc client, to forward MCP calls to it.
+func ForwardToSimpleConnectByteStreamClient(s *mcpserver.MCPServer, client SimpleConnectByteStreamClient, opts ...runtime.Option) {
+	config := runtime.NewConfig()
+	for _, opt := range opts {
+		opt(config)
+	}
+	QueryWriteStatusTool := ByteStream_QueryWriteStatusTool
+	// Add extra properties to schema if configured
+	if len(config.ExtraProperties) > 0 {
+		QueryWriteStatusTool = runtime.AddExtraPropertiesToTool(QueryWriteStatusTool, config.ExtraProperties)
+	}
+
+	s.AddTool(QueryWriteStatusTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		var req bytestream.QueryWriteStatusRequest
+
+		message := request.GetArguments()
+
+		// Extract extra properties if configured
+		for _, prop := range config.ExtraProperties {
+			if propVal, ok := message[prop.Name]; ok {
+				ctx = context.WithValue(ctx, prop.ContextKey, propVal)
+			}
+		}
+
+		marshaled, err := json.Marshal(message)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(marshaled, &req); err != nil {
+			return nil, err
+		}
+
+		resp, err := client.QueryWriteStatus(ctx, &req)
+		if err != nil {
+			return runtime.HandleError(err)
+		}
+
+		marshaled, err = (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(resp)
 		if err != nil {
 			return nil, err
 		}
