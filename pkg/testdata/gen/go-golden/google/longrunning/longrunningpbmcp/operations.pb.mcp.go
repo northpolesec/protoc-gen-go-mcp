@@ -487,6 +487,15 @@ type ConnectOperationsClient interface {
 	WaitOperation(ctx context.Context, req *connect.Request[longrunningpb.WaitOperationRequest]) (*connect.Response[longrunningpb.Operation], error)
 }
 
+// SimpleConnectOperationsClient is compatible with the simple connectrpc-go client interface.
+type SimpleConnectOperationsClient interface {
+	CancelOperation(ctx context.Context, req *longrunningpb.CancelOperationRequest) (*emptypb.Empty, error)
+	DeleteOperation(ctx context.Context, req *longrunningpb.DeleteOperationRequest) (*emptypb.Empty, error)
+	GetOperation(ctx context.Context, req *longrunningpb.GetOperationRequest) (*longrunningpb.Operation, error)
+	ListOperations(ctx context.Context, req *longrunningpb.ListOperationsRequest) (*longrunningpb.ListOperationsResponse, error)
+	WaitOperation(ctx context.Context, req *longrunningpb.WaitOperationRequest) (*longrunningpb.Operation, error)
+}
+
 // ForwardToConnectOperationsClient registers a connectrpc client, to forward MCP calls to it.
 func ForwardToConnectOperationsClient(s *mcpserver.MCPServer, client ConnectOperationsClient, opts ...runtime.Option) {
 	config := runtime.NewConfig()
@@ -678,6 +687,204 @@ func ForwardToConnectOperationsClient(s *mcpserver.MCPServer, client ConnectOper
 		}
 
 		marshaled, err = (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(resp.Msg)
+		if err != nil {
+			return nil, err
+		}
+		return mcp.NewToolResultText(string(marshaled)), nil
+	})
+}
+
+// ForwardToSimpleConnectOperationsClient registers a simple connectrpc client, to forward MCP calls to it.
+func ForwardToSimpleConnectOperationsClient(s *mcpserver.MCPServer, client SimpleConnectOperationsClient, opts ...runtime.Option) {
+	config := runtime.NewConfig()
+	for _, opt := range opts {
+		opt(config)
+	}
+	CancelOperationTool := Operations_CancelOperationTool
+	// Add extra properties to schema if configured
+	if len(config.ExtraProperties) > 0 {
+		CancelOperationTool = runtime.AddExtraPropertiesToTool(CancelOperationTool, config.ExtraProperties)
+	}
+
+	s.AddTool(CancelOperationTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		var req longrunningpb.CancelOperationRequest
+
+		message := request.GetArguments()
+
+		// Extract extra properties if configured
+		for _, prop := range config.ExtraProperties {
+			if propVal, ok := message[prop.Name]; ok {
+				ctx = context.WithValue(ctx, prop.ContextKey, propVal)
+			}
+		}
+
+		marshaled, err := json.Marshal(message)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(marshaled, &req); err != nil {
+			return nil, err
+		}
+
+		resp, err := client.CancelOperation(ctx, &req)
+		if err != nil {
+			return runtime.HandleError(err)
+		}
+
+		marshaled, err = (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(resp)
+		if err != nil {
+			return nil, err
+		}
+		return mcp.NewToolResultText(string(marshaled)), nil
+	})
+	DeleteOperationTool := Operations_DeleteOperationTool
+	// Add extra properties to schema if configured
+	if len(config.ExtraProperties) > 0 {
+		DeleteOperationTool = runtime.AddExtraPropertiesToTool(DeleteOperationTool, config.ExtraProperties)
+	}
+
+	s.AddTool(DeleteOperationTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		var req longrunningpb.DeleteOperationRequest
+
+		message := request.GetArguments()
+
+		// Extract extra properties if configured
+		for _, prop := range config.ExtraProperties {
+			if propVal, ok := message[prop.Name]; ok {
+				ctx = context.WithValue(ctx, prop.ContextKey, propVal)
+			}
+		}
+
+		marshaled, err := json.Marshal(message)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(marshaled, &req); err != nil {
+			return nil, err
+		}
+
+		resp, err := client.DeleteOperation(ctx, &req)
+		if err != nil {
+			return runtime.HandleError(err)
+		}
+
+		marshaled, err = (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(resp)
+		if err != nil {
+			return nil, err
+		}
+		return mcp.NewToolResultText(string(marshaled)), nil
+	})
+	GetOperationTool := Operations_GetOperationTool
+	// Add extra properties to schema if configured
+	if len(config.ExtraProperties) > 0 {
+		GetOperationTool = runtime.AddExtraPropertiesToTool(GetOperationTool, config.ExtraProperties)
+	}
+
+	s.AddTool(GetOperationTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		var req longrunningpb.GetOperationRequest
+
+		message := request.GetArguments()
+
+		// Extract extra properties if configured
+		for _, prop := range config.ExtraProperties {
+			if propVal, ok := message[prop.Name]; ok {
+				ctx = context.WithValue(ctx, prop.ContextKey, propVal)
+			}
+		}
+
+		marshaled, err := json.Marshal(message)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(marshaled, &req); err != nil {
+			return nil, err
+		}
+
+		resp, err := client.GetOperation(ctx, &req)
+		if err != nil {
+			return runtime.HandleError(err)
+		}
+
+		marshaled, err = (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(resp)
+		if err != nil {
+			return nil, err
+		}
+		return mcp.NewToolResultText(string(marshaled)), nil
+	})
+	ListOperationsTool := Operations_ListOperationsTool
+	// Add extra properties to schema if configured
+	if len(config.ExtraProperties) > 0 {
+		ListOperationsTool = runtime.AddExtraPropertiesToTool(ListOperationsTool, config.ExtraProperties)
+	}
+
+	s.AddTool(ListOperationsTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		var req longrunningpb.ListOperationsRequest
+
+		message := request.GetArguments()
+
+		// Extract extra properties if configured
+		for _, prop := range config.ExtraProperties {
+			if propVal, ok := message[prop.Name]; ok {
+				ctx = context.WithValue(ctx, prop.ContextKey, propVal)
+			}
+		}
+
+		marshaled, err := json.Marshal(message)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(marshaled, &req); err != nil {
+			return nil, err
+		}
+
+		resp, err := client.ListOperations(ctx, &req)
+		if err != nil {
+			return runtime.HandleError(err)
+		}
+
+		marshaled, err = (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(resp)
+		if err != nil {
+			return nil, err
+		}
+		return mcp.NewToolResultText(string(marshaled)), nil
+	})
+	WaitOperationTool := Operations_WaitOperationTool
+	// Add extra properties to schema if configured
+	if len(config.ExtraProperties) > 0 {
+		WaitOperationTool = runtime.AddExtraPropertiesToTool(WaitOperationTool, config.ExtraProperties)
+	}
+
+	s.AddTool(WaitOperationTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		var req longrunningpb.WaitOperationRequest
+
+		message := request.GetArguments()
+
+		// Extract extra properties if configured
+		for _, prop := range config.ExtraProperties {
+			if propVal, ok := message[prop.Name]; ok {
+				ctx = context.WithValue(ctx, prop.ContextKey, propVal)
+			}
+		}
+
+		marshaled, err := json.Marshal(message)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(marshaled, &req); err != nil {
+			return nil, err
+		}
+
+		resp, err := client.WaitOperation(ctx, &req)
+		if err != nil {
+			return runtime.HandleError(err)
+		}
+
+		marshaled, err = (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(resp)
 		if err != nil {
 			return nil, err
 		}

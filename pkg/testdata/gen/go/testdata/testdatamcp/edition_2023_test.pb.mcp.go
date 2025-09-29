@@ -316,6 +316,13 @@ type ConnectTestServiceEdition2023Client interface {
 	ProcessWellKnownTypes(ctx context.Context, req *connect.Request[testdata.ProcessWellKnownTypesRequestEdition2023]) (*connect.Response[testdata.ProcessWellKnownTypesResponseEdition2023], error)
 }
 
+// SimpleConnectTestServiceEdition2023Client is compatible with the simple connectrpc-go client interface.
+type SimpleConnectTestServiceEdition2023Client interface {
+	CreateItem(ctx context.Context, req *testdata.CreateItemRequestEdition2023) (*testdata.CreateItemResponseEdition2023, error)
+	GetItem(ctx context.Context, req *testdata.GetItemRequestEdition2023) (*testdata.GetItemResponseEdition2023, error)
+	ProcessWellKnownTypes(ctx context.Context, req *testdata.ProcessWellKnownTypesRequestEdition2023) (*testdata.ProcessWellKnownTypesResponseEdition2023, error)
+}
+
 // ForwardToConnectTestServiceEdition2023Client registers a connectrpc client, to forward MCP calls to it.
 func ForwardToConnectTestServiceEdition2023Client(s *mcpserver.MCPServer, client ConnectTestServiceEdition2023Client, opts ...runtime.Option) {
 	config := runtime.NewConfig()
@@ -431,6 +438,128 @@ func ForwardToConnectTestServiceEdition2023Client(s *mcpserver.MCPServer, client
 		}
 
 		marshaled, err = (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(resp.Msg)
+		if err != nil {
+			return nil, err
+		}
+		return mcp.NewToolResultText(string(marshaled)), nil
+	})
+}
+
+// ForwardToSimpleConnectTestServiceEdition2023Client registers a simple connectrpc client, to forward MCP calls to it.
+func ForwardToSimpleConnectTestServiceEdition2023Client(s *mcpserver.MCPServer, client SimpleConnectTestServiceEdition2023Client, opts ...runtime.Option) {
+	config := runtime.NewConfig()
+	for _, opt := range opts {
+		opt(config)
+	}
+	CreateItemTool := TestServiceEdition2023_CreateItemTool
+	// Add extra properties to schema if configured
+	if len(config.ExtraProperties) > 0 {
+		CreateItemTool = runtime.AddExtraPropertiesToTool(CreateItemTool, config.ExtraProperties)
+	}
+
+	s.AddTool(CreateItemTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		var req testdata.CreateItemRequestEdition2023
+
+		message := request.GetArguments()
+
+		// Extract extra properties if configured
+		for _, prop := range config.ExtraProperties {
+			if propVal, ok := message[prop.Name]; ok {
+				ctx = context.WithValue(ctx, prop.ContextKey, propVal)
+			}
+		}
+
+		marshaled, err := json.Marshal(message)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(marshaled, &req); err != nil {
+			return nil, err
+		}
+
+		resp, err := client.CreateItem(ctx, &req)
+		if err != nil {
+			return runtime.HandleError(err)
+		}
+
+		marshaled, err = (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(resp)
+		if err != nil {
+			return nil, err
+		}
+		return mcp.NewToolResultText(string(marshaled)), nil
+	})
+	GetItemTool := TestServiceEdition2023_GetItemTool
+	// Add extra properties to schema if configured
+	if len(config.ExtraProperties) > 0 {
+		GetItemTool = runtime.AddExtraPropertiesToTool(GetItemTool, config.ExtraProperties)
+	}
+
+	s.AddTool(GetItemTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		var req testdata.GetItemRequestEdition2023
+
+		message := request.GetArguments()
+
+		// Extract extra properties if configured
+		for _, prop := range config.ExtraProperties {
+			if propVal, ok := message[prop.Name]; ok {
+				ctx = context.WithValue(ctx, prop.ContextKey, propVal)
+			}
+		}
+
+		marshaled, err := json.Marshal(message)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(marshaled, &req); err != nil {
+			return nil, err
+		}
+
+		resp, err := client.GetItem(ctx, &req)
+		if err != nil {
+			return runtime.HandleError(err)
+		}
+
+		marshaled, err = (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(resp)
+		if err != nil {
+			return nil, err
+		}
+		return mcp.NewToolResultText(string(marshaled)), nil
+	})
+	ProcessWellKnownTypesTool := TestServiceEdition2023_ProcessWellKnownTypesTool
+	// Add extra properties to schema if configured
+	if len(config.ExtraProperties) > 0 {
+		ProcessWellKnownTypesTool = runtime.AddExtraPropertiesToTool(ProcessWellKnownTypesTool, config.ExtraProperties)
+	}
+
+	s.AddTool(ProcessWellKnownTypesTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		var req testdata.ProcessWellKnownTypesRequestEdition2023
+
+		message := request.GetArguments()
+
+		// Extract extra properties if configured
+		for _, prop := range config.ExtraProperties {
+			if propVal, ok := message[prop.Name]; ok {
+				ctx = context.WithValue(ctx, prop.ContextKey, propVal)
+			}
+		}
+
+		marshaled, err := json.Marshal(message)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(marshaled, &req); err != nil {
+			return nil, err
+		}
+
+		resp, err := client.ProcessWellKnownTypes(ctx, &req)
+		if err != nil {
+			return runtime.HandleError(err)
+		}
+
+		marshaled, err = (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(resp)
 		if err != nil {
 			return nil, err
 		}
